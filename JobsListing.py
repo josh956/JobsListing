@@ -46,7 +46,12 @@ if st.button("Search"):
     elif remote_filter == "No":
         query += " onsite"
 
-    # Use the environment variable for RapidAPI key.
+    # Check for API key in secrets
+    if "rapidapi" not in st.secrets or "key" not in st.secrets["rapidapi"]:
+        st.error("API key is missing. Please check your Streamlit secrets configuration.")
+        st.stop()
+
+    # Retrieve the RapidAPI key
     rapid_api_key = st.secrets["rapidapi"]["key"]
     url = "https://jsearch.p.rapidapi.com/search"
     querystring = {
@@ -60,45 +65,47 @@ if st.button("Search"):
         "x-rapidapi-key": rapid_api_key,
         "x-rapidapi-host": "jsearch.p.rapidapi.com"
     }
-    
-    with st.spinner("Searching for jobs..."):
-        response = requests.get(url, headers=headers, params=querystring)
-    
-    if response.status_code == 200:
+
+    try:
+        with st.spinner("Searching for jobs..."):
+            response = requests.get(url, headers=headers, params=querystring)
+            response.raise_for_status()  # Raises an error for bad status codes
         data = response.json()
-        jobs = data.get("data", [])
+    except requests.exceptions.RequestException:
+        st.error("Something went wrong while fetching jobs. Please try again later.")
+        st.stop()
+
+    jobs = data.get("data", [])
         
-        if jobs:
-            for job in jobs:
-                # Extract job details.
-                job_title = job.get("job_title", "No Title")
-                employer_name = job.get("employer_name", "N/A")
-                job_location = job.get("job_location", "N/A")
-                job_employment_type = job.get("job_employment_type", "N/A")
-                posted_date = job.get("job_posted_at", "N/A")
-                full_description = job.get("job_description", "No description available.")
-                apply_link = job.get("job_apply_link", "#")
-                
-                # Enhanced job card formatting
-                st.markdown(f"""
-                <div style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
-                    <h3 style="margin-bottom: 5px;">{job_title}</h3>
-                    <p><strong>Employer:</strong> {employer_name}</p>
-                    <p><strong>Location:</strong> {job_location}</p>
-                    <p><strong>Employment Type:</strong> {job_employment_type}</p>
-                    <p><strong>Posted:</strong> {posted_date}</p>
-                    <a href="{apply_link}" target="_blank" style="color: #007BFF; text-decoration: none; font-weight: bold;">Apply Here</a>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Collapsible Job Description.
-                with st.expander("View Job Description"):
-                    st.write(full_description)
-                st.markdown("---")
-        else:
-            st.write("No jobs found for your search.")
+    if jobs:
+        for job in jobs:
+            # Extract job details.
+            job_title = job.get("job_title", "No Title")
+            employer_name = job.get("employer_name", "N/A")
+            job_location = job.get("job_location", "N/A")
+            job_employment_type = job.get("job_employment_type", "N/A")
+            posted_date = job.get("job_posted_at", "N/A")
+            full_description = job.get("job_description", "No description available.")
+            apply_link = job.get("job_apply_link", "#")
+            
+            # Enhanced job card formatting
+            st.markdown(f"""
+            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
+                <h3 style="margin-bottom: 5px;">{job_title}</h3>
+                <p><strong>Employer:</strong> {employer_name}</p>
+                <p><strong>Location:</strong> {job_location}</p>
+                <p><strong>Employment Type:</strong> {job_employment_type}</p>
+                <p><strong>Posted:</strong> {posted_date}</p>
+                <a href="{apply_link}" target="_blank" style="color: #007BFF; text-decoration: none; font-weight: bold;">Apply Here</a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Collapsible Job Description.
+            with st.expander("View Job Description"):
+                st.write(full_description)
+            st.markdown("---")
     else:
-        st.error("Error fetching jobs. Please try again later.")
+        st.write("No jobs found for your search.")
 
 # --- Footer ---
 st.markdown(
