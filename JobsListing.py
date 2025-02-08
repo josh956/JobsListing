@@ -47,7 +47,7 @@ if st.button("Search"):
         query += " onsite"
 
     # Use the environment variable for RapidAPI key.
-    rapid_api_key = os.getenv("RapidAPI")
+    rapid_api_key = st.secrets["rapidapi"]["key"]
     url = "https://jsearch.p.rapidapi.com/search"
     querystring = {
         "query": query,
