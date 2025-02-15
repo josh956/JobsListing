@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import requests
 
+
 # --- Sidebar with Instructions ---
 st.sidebar.title("How to Use the App")
 st.sidebar.markdown(
@@ -46,13 +47,8 @@ if st.button("Search"):
     elif remote_filter == "No":
         query += " onsite"
 
-    # Check for API key in secrets
-    if "rapidapi" not in st.secrets or "key" not in st.secrets["rapidapi"]:
-        st.error("API key is missing. Please check your Streamlit secrets configuration.")
-        st.stop()
-
     # Retrieve the RapidAPI key
-    rapid_api_key = st.secrets["rapidapi"]["key"]
+    rapid_api_key = os.getenv("RapidAPI") if os.getenv("RapidAPI") else st.secrets["rapidapi"]["key"]
     url = "https://jsearch.p.rapidapi.com/search"
     querystring = {
         "query": query,
@@ -106,6 +102,18 @@ if st.button("Search"):
             st.markdown("---")
     else:
         st.write("No jobs found for your search.")
+
+    # --- Pagination (Simulated) ---
+    if st.button("Next Page"):
+     st.markdown(
+        """
+        <script>
+        alert('To access additional pages, please contact me at your-email@example.com for further access.');
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 # --- Footer ---
 st.markdown(
