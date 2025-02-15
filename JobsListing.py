@@ -45,7 +45,9 @@ if "jobs" not in st.session_state:
 def contact_modal():
     st.write("To access additional pages, please contact Josh Poresky:")
     st.write("📧 Email: [Josh.Poresky@gmail.com](mailto:Josh.Poresky@gmail.com)")
-    st.write("🔗 LinkedIn: [https://www.linkedin.com/in/josh-poresky956/](https://www.linkedin.com/in/josh-poresky956/)")
+    st.markdown('[🔗 Contact me on LinkedIn](https://www.linkedin.com/in/josh-poresky956/)',
+        unsafe_allow_html=True
+    )    
     if st.button("Close"):
         st.session_state.show_modal = False
         st.rerun()
