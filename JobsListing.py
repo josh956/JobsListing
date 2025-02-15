@@ -7,21 +7,23 @@ st.sidebar.title("How to Use the App")
 st.sidebar.markdown(
     """
     **Job Search App Instructions:**
-    
+
     1. **Enter a Job Query:**  
        Specify the job role and location. For example, "Developer jobs in Chicago".
-       
+
     2. **Select Employment Type:**  
        Choose among All, Full-time, Part-time, Contractor, or Entry Level.
-       
+
     3. **Set Salary Range:**  
        Use the slider to select your desired salary range.
-       
+
     4. **Remote Filter:**  
        Select if you want to search for remote, onsite, or all types of jobs.
-       
+
     5. **Search:**  
        Click the **Search** button to fetch job listings based on your criteria.
+
+    Use the collapsible sections under each job card to read the full job description.
     """
 )
 
@@ -38,6 +40,17 @@ remote_filter = st.radio("Remote Jobs Only?", options=["All", "Yes", "No"])
 if "jobs" not in st.session_state:
     st.session_state.jobs = None  # Stores job results
 
+# --- Define the Modal Dialog ---
+@st.dialog("Contact for Access", width="small")
+def contact_modal():
+    st.write("To access additional pages, please contact Josh Poresky:")
+    st.write("📧 Email: [Josh.Poresky@gmail.com](mailto:Josh.Poresky@gmail.com)")
+    st.write("🔗 LinkedIn: [https://www.linkedin.com/in/josh-poresky956/](https://www.linkedin.com/in/josh-poresky956/)")
+    if st.button("Close"):
+        st.session_state.show_modal = False
+        st.rerun()
+
+# --- Search Functionality ---
 if st.button("Search"):
     query = job_query
     if employment_type != "All":
@@ -83,7 +96,7 @@ if st.session_state.jobs:
         full_description = job.get("job_description", "No description available.")
         apply_link = job.get("job_apply_link", "#")
 
-        # Job card
+        # Enhanced job card formatting
         st.markdown(f"""
         <div style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
             <h3 style="margin-bottom: 5px;">{job_title}</h3>
@@ -95,19 +108,25 @@ if st.session_state.jobs:
         </div>
         """, unsafe_allow_html=True)
 
+        # Collapsible Job Description.
         with st.expander("View Job Description"):
             st.write(full_description)
         st.markdown("---")
 
     # --- Pagination ---
     if st.button("Next Page"):
-        st.warning("To access additional pages, please contact me at [your-email@example.com](mailto:your-email@example.com) for further access.")
+        st.session_state.show_modal = True
+
+# --- Display Modal if Triggered ---
+if st.session_state.get("show_modal", False):
+    contact_modal()
+
 # --- Footer ---
 st.markdown(
     """
     <hr>
     <p style="text-align: center;">
-    <b>Job Listing Site</b> &copy; 2025<br>
+    <b>Jobst Listing Application</b> &copy; 2025<br>
     Developed by <a href="https://www.linkedin.com/in/josh-poresky956/" target="_blank">Josh Poresky</a><br><br>
     </p>
     """,
