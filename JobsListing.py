@@ -2,13 +2,12 @@ import os
 import streamlit as st
 import requests
 
-
 # --- Sidebar with Instructions ---
 st.sidebar.title("How to Use the App")
 st.sidebar.markdown(
     """
     **Job Search App Instructions:**
-
+    
     1. **Enter a Job Query:**  
        Specify the job role and location. For example, "Developer jobs in Chicago".
        
@@ -23,8 +22,6 @@ st.sidebar.markdown(
        
     5. **Search:**  
        Click the **Search** button to fetch job listings based on your criteria.
-       
-    Use the collapsible sections under each job card to read the full job description.
     """
 )
 
@@ -37,8 +34,11 @@ employment_type = st.radio("Select Employment Type", options=["All", "Full-time"
 salary_range = st.slider("Select Salary Range ($)", 0, 350000, (50000, 100000), step=15000)
 remote_filter = st.radio("Remote Jobs Only?", options=["All", "Yes", "No"])
 
+# Initialize session state for search results
+if "jobs" not in st.session_state:
+    st.session_state.jobs = None  # Stores job results
+
 if st.button("Search"):
-    # Build the search query.
     query = job_query
     if employment_type != "All":
         query += f" {employment_type}"
@@ -65,62 +65,49 @@ if st.button("Search"):
     try:
         with st.spinner("Searching for jobs..."):
             response = requests.get(url, headers=headers, params=querystring)
-            response.raise_for_status()  # Raises an error for bad status codes
+            response.raise_for_status()
         data = response.json()
+        st.session_state.jobs = data.get("data", [])  # Store results in session state
     except requests.exceptions.RequestException:
         st.error("Something went wrong while fetching jobs. Please try again later.")
-        st.stop()
+        st.session_state.jobs = None
 
-    jobs = data.get("data", [])
-        
-    if jobs:
-        for job in jobs:
-            # Extract job details.
-            job_title = job.get("job_title", "No Title")
-            employer_name = job.get("employer_name", "N/A")
-            job_location = job.get("job_location", "N/A")
-            job_employment_type = job.get("job_employment_type", "N/A")
-            posted_date = job.get("job_posted_at", "N/A")
-            full_description = job.get("job_description", "No description available.")
-            apply_link = job.get("job_apply_link", "#")
-            
-            # Enhanced job card formatting
-            st.markdown(f"""
-            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
-                <h3 style="margin-bottom: 5px;">{job_title}</h3>
-                <p><strong>Employer:</strong> {employer_name}</p>
-                <p><strong>Location:</strong> {job_location}</p>
-                <p><strong>Employment Type:</strong> {job_employment_type}</p>
-                <p><strong>Posted:</strong> {posted_date}</p>
-                <a href="{apply_link}" target="_blank" style="color: #007BFF; text-decoration: none; font-weight: bold;">Apply Here</a>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Collapsible Job Description.
-            with st.expander("View Job Description"):
-                st.write(full_description)
-            st.markdown("---")
-    else:
-        st.write("No jobs found for your search.")
+# --- Display Jobs ---
+if st.session_state.jobs:
+    for job in st.session_state.jobs:
+        job_title = job.get("job_title", "No Title")
+        employer_name = job.get("employer_name", "N/A")
+        job_location = job.get("job_location", "N/A")
+        job_employment_type = job.get("job_employment_type", "N/A")
+        posted_date = job.get("job_posted_at", "N/A")
+        full_description = job.get("job_description", "No description available.")
+        apply_link = job.get("job_apply_link", "#")
 
-    # --- Pagination (Simulated) ---
+        # Job card
+        st.markdown(f"""
+        <div style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
+            <h3 style="margin-bottom: 5px;">{job_title}</h3>
+            <p><strong>Employer:</strong> {employer_name}</p>
+            <p><strong>Location:</strong> {job_location}</p>
+            <p><strong>Employment Type:</strong> {job_employment_type}</p>
+            <p><strong>Posted:</strong> {posted_date}</p>
+            <a href="{apply_link}" target="_blank" style="color: #007BFF; text-decoration: none; font-weight: bold;">Apply Here</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.expander("View Job Description"):
+            st.write(full_description)
+        st.markdown("---")
+
+    # --- Pagination ---
     if st.button("Next Page"):
-     st.markdown(
-        """
-        <script>
-        alert('To access additional pages, please contact me at your-email@example.com for further access.');
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
-
-
+        st.warning("To access additional pages, please contact me at [your-email@example.com](mailto:your-email@example.com) for further access.")
 # --- Footer ---
 st.markdown(
     """
     <hr>
     <p style="text-align: center;">
-    <b>2025 Job Listing App</b> &copy; 2025<br>
+    <b>Job Listing Site</b> &copy; 2025<br>
     Developed by <a href="https://www.linkedin.com/in/josh-poresky956/" target="_blank">Josh Poresky</a><br><br>
     </p>
     """,
